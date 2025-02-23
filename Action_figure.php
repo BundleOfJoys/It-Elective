@@ -39,7 +39,7 @@
             font-size: 16px;
             margin: 10px 0;
         }
-        .add-to-cart, .show-description {
+        .add-to-cart, .show-description, .delete-product, .edit-product {
             display: inline-block;
             background-color: #28a745;
             color: white;
@@ -49,16 +49,32 @@
             cursor: pointer;
             font-size: 14px;
             margin-top: 10px;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
         }
         .show-description {
             background-color: #007bff;
         }
+        .delete-product {
+            background-color: #dc3545;
+        }
+        .edit-product {
+            background-color: #ffc107;
+        }
         .add-to-cart:hover {
             background-color: #218838;
+            transform: scale(1.1);
         }
         .show-description:hover {
             background-color: #0056b3;
+            transform: scale(1.1);
+        }
+        .delete-product:hover {
+            background-color: #c82333;
+            transform: scale(1.1);
+        }
+        .edit-product:hover {
+            background-color: #e0a800;
+            transform: scale(1.1);
         }
         .cart-button {
             margin: 20px;
@@ -138,6 +154,35 @@
         .close-description:hover {
             color: red;
         }
+        /* Edit Product Modal */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+        .edit-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: 10% auto;
+            text-align: left;
+        }
+        .close-edit {
+            cursor: pointer;
+            color: #555;
+            float: right;
+            font-size: 18px;
+        }
+        .close-edit:hover {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -178,16 +223,25 @@
         </div>
     </div>
 
+    <!-- Edit Product Modal -->
+    <div id="edit-modal" class="edit-modal">
+        <div class="edit-content">
+            <span class="close-edit" onclick="closeEdit()">&times;</span>
+            <h3>Edit Product</h3>
+            <form id="edit-product-form">
+                <input type="text" id="edit-product-name" placeholder="Product Name" required>
+                <input type="text" id="edit-product-description" placeholder="Product Description" required>
+                <input type="text" id="edit-product-image" placeholder="Image URL">
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="product_data.js"></script>
     <script>
         let cart = [];
-        let products = [
-            { name: 'Product 1', description: 'This is a great product 1!', image: 'img/b1.webp' },
-            { name: 'Product 2', description: 'This is a great product 2!', image: 'img/b2.webp' },
-            { name: 'Product 3', description: 'This is a great product 3!', image: 'img/v3.webp' },
-            { name: 'Product 4', description: 'This is a great product 4!', image: 'img/v4.webp' },
-            { name: 'Product 5', description: 'This is a great product 5!', image: 'img/v5.webp' },
-            { name: 'Product 6', description: 'This is a great product 6!', image: 'img/v6.webp' }
-        ];
+
+        let currentEditIndex = -1;
 
         function addToCart(productName, imageSrc) {
             cart.push({ name: productName, image: imageSrc });
@@ -256,6 +310,11 @@
             if (event.target === descriptionModal) {
                 descriptionModal.style.display = "none";
             }
+
+            let editModal = document.getElementById("edit-modal");
+            if (event.target === editModal) {
+                editModal.style.display = "none";
+            }
         }
 
         // Add new product
@@ -269,10 +328,41 @@
             renderProducts();
         });
 
+        function deleteProduct(productName) {
+            if (confirm(`Are you sure you want to delete ${productName}?`)) {
+                products = products.filter(product => product.name !== productName);
+                renderProducts();
+            }
+        }
+
+        function editProduct(index) {
+            currentEditIndex = index;
+            const product = products[index];
+            document.getElementById('edit-product-name').value = product.name;
+            document.getElementById('edit-product-description').value = product.description;
+            document.getElementById('edit-product-image').value = product.image;
+            document.getElementById('edit-modal').style.display = 'block';
+        }
+
+        document.getElementById('edit-product-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('edit-product-name').value;
+            const description = document.getElementById('edit-product-description').value;
+            const image = document.getElementById('edit-product-image').value;
+
+            products[currentEditIndex] = { name, description, image };
+            renderProducts();
+            closeEdit();
+        });
+
+        function closeEdit() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
         function renderProducts() {
             const productGrid = document.querySelector('.product-grid');
             productGrid.innerHTML = '';
-            products.forEach(product => {
+            products.forEach((product, index) => {
                 const productDiv = document.createElement('div');
                 productDiv.classList.add('product');
                 productDiv.innerHTML = `
@@ -280,6 +370,8 @@
                     <h3>${product.name}</h3>
                     <button class="add-to-cart" onclick="addToCart('${product.name}', '${product.image}')">Add to Cart</button>
                     <button class="show-description" onclick="showDescription('${product.name}', '${product.description}', '${product.image}')">Show Description</button>
+                    <button class="edit-product" onclick="editProduct(${index})">Edit</button>
+                    <button class="delete-product" onclick="deleteProduct('${product.name}')">Delete</button>
                 `;
                 productGrid.appendChild(productDiv);
             });
