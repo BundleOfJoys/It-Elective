@@ -6,4 +6,6 @@ let products = [
     { name: 'Product 5', description: 'This is a great product 5!', image: 'img/v5.webp' },
     { name: 'Product 6', description: 'This is a great product 6!', image: 'img/v6.webp' },
     
+    { name: 'Product 6', description: 'This is a great product 6!', image: 'img/v6.webp' },
+    
 ];
