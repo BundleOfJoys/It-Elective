@@ -23,8 +23,10 @@
            
            
         <a href="?page=home">Home</a>
+        <a href="?page=Action_figure">Action Figure</a>
              <a href="?page=List">List</a>
             <a href="index.php?page=login">Log out</a>
+            
            
 
         </div>
@@ -35,6 +37,9 @@
             case "luffy":
                 include "mtrio.php";
                 break;
+                case "Action_figure":
+                    include "Action_figure_ordinary.php";
+                    break;
                 case "home":
                     include "home.php";
                     break;
