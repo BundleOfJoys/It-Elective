@@ -11,14 +11,7 @@
             margin: 20px;
             text-align: center;
         }
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            padding: 20px;
-            max-width: 800px;
-            margin: auto;
-        }
+  
         .product {
             background: white;
             padding: 15px;
