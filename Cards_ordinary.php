@@ -208,7 +208,7 @@
 </head>
 <body>
 
-    <h1>One Piece Action Figures</h1>
+    <h1>One Piece Trading Cards</h1>
     
     <!-- Add Product Form -->
     <form id="add-product-form" enctype="multipart/form-data">
