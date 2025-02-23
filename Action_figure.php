@@ -233,8 +233,6 @@
 
     <script src="products.js"></script>
     <script>
-        let cart = [];
-
         let currentEditIndex = -1;
 
         function showDescription(productName, description, imageSrc) {
@@ -250,14 +248,14 @@
 
         function deleteProduct(productName) {
             if (confirm(`Are you sure you want to delete ${productName}?`)) {
-                products = products.filter(product => product.name !== productName);
+                actionFigures = actionFigures.filter(product => product.name !== productName);
                 renderProducts();
             }
         }
 
         function editProduct(index) {
             currentEditIndex = index;
-            const product = products[index];
+            const product = actionFigures[index];
             document.getElementById('edit-product-name').value = product.name;
             document.getElementById('edit-product-description').value = product.description;
             document.getElementById('edit-product-image').value = product.image;
@@ -270,7 +268,7 @@
             const description = document.getElementById('edit-product-description').value;
             const image = document.getElementById('edit-product-image').value;
 
-            products[currentEditIndex] = { name, description, image };
+            actionFigures[currentEditIndex] = { name, description, image };
             renderProducts();
             closeEdit();
         });
@@ -282,7 +280,7 @@
         function renderProducts() {
             const productGrid = document.querySelector('.product-grid');
             productGrid.innerHTML = '';
-            products.forEach((product, index) => {
+            actionFigures.forEach((product, index) => {
                 const productDiv = document.createElement('div');
                 productDiv.classList.add('product');
                 productDiv.innerHTML = `

@@ -12,7 +12,7 @@
         <?php include "header.php"; ?>
     </div>
 
-    <div class="column">
+    <div class="column" style="height: 1500px;">
         <?php
         $pg = isset($_GET['page']) ? $_GET['page'] : 'default';
         ?>    
@@ -21,6 +21,8 @@
            
             <a href="?page=home">Home</a>
             <a href="?page=Action_figure">Action Figure</a>
+            <a href="?page=Manga">Manga</a>
+            <a href="?page=Cards">Cards</a>
             <a href="?page=entry">Entry</a>
              <a href="?page=haha">Delete</a>
              <a href="?page=Edit">Edit</a>
@@ -42,6 +44,12 @@
                     case "Action_figure":
                         include "Action_figure.php";
                         break;
+                        case "Manga":
+                            include "Manga.php";
+                            break;
+                            case "Cards":
+                                include "Cards.php";
+                                break;
             
                 case "haha":
                     include "delete.php";

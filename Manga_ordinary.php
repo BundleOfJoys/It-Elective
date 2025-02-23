@@ -208,7 +208,7 @@
 </head>
 <body>
 
-    <h1>One Piece Action Figures</h1>
+    <h1>One Piece Manga</h1>
     
     <!-- Add Product Form -->
     <form id="add-product-form" enctype="multipart/form-data">
@@ -272,7 +272,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const imageUrl = e.target.result;
-                    actionFigures.push({ name, description, image: imageUrl });
+                    manga.push({ name, description, image: imageUrl });
                     renderProducts();
                 };
                 reader.readAsDataURL(imageFile);
@@ -367,7 +367,7 @@
         function renderProducts() {
             const productGrid = document.querySelector('.product-grid');
             productGrid.innerHTML = '';
-            actionFigures.forEach((product, index) => {
+            manga.forEach((product, index) => {
                 const productDiv = document.createElement('div');
                 productDiv.classList.add('product');
                 productDiv.innerHTML = `
