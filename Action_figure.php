@@ -296,6 +296,24 @@
             });
         }
 
+        document.getElementById('add-product-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('product-name').value;
+            const description = document.getElementById('product-description').value;
+            const imageInput = document.getElementById('product-image');
+            const imageFile = imageInput.files[0];
+
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageUrl = e.target.result;
+                    actionFigures.push({ name, description, image: imageUrl });
+                    renderProducts();
+                };
+                reader.readAsDataURL(imageFile);
+            }
+        });
+
         // Initial render
         renderProducts();
     </script>
