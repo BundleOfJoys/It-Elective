@@ -212,7 +212,12 @@
     
     <!-- Add Product Form -->
     <form id="add-product-form" enctype="multipart/form-data">
-      
+        <input type="text" id="product-name" placeholder="Product Name" required>
+        <input type="text" id="product-description" placeholder="Product Description" required>
+        <input type="number" id="product-price" placeholder="Product Price" required>
+        <input type="number" id="product-stock" placeholder="Product Stock" required>
+        <input type="file" id="product-image" accept="image/*" required>
+        <button type="submit">Add Product</button>
     </form>
 
     <div class="product-grid">
@@ -249,6 +254,8 @@
             <form id="edit-product-form">
                 <input type="text" id="edit-product-name" placeholder="Product Name" required>
                 <input type="text" id="edit-product-description" placeholder="Product Description" required>
+                <input type="number" id="edit-product-price" placeholder="Product Price" required>
+                <input type="number" id="edit-product-stock" placeholder="Product Stock" required>
                 <input type="text" id="edit-product-image" placeholder="Image URL">
                 <button type="submit">Save Changes</button>
             </form>
@@ -258,13 +265,15 @@
     <script src="products.js"></script>
     <script>
         let cart = [];
-
+        let actionFigures = [];
         let currentEditIndex = -1;
 
         document.getElementById('add-product-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const name = document.getElementById('product-name').value;
             const description = document.getElementById('product-description').value;
+            const price = document.getElementById('product-price').value;
+            const stock = document.getElementById('product-stock').value;
             const imageInput = document.getElementById('product-image');
             const imageFile = imageInput.files[0];
 
@@ -272,7 +281,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const imageUrl = e.target.result;
-                    actionFigures.push({ name, description, image: imageUrl });
+                    actionFigures.push({ name, description, price, stock, image: imageUrl });
                     renderProducts();
                 };
                 reader.readAsDataURL(imageFile);
@@ -373,6 +382,8 @@
                 productDiv.innerHTML = `
                     <img src="${product.image}" alt="${product.name}">
                     <h3>${product.name}</h3>
+                    <p>Price: $${product.price}</p>
+                    <p>Stock: ${product.stock}</p>
                     <div class="button-container">
                         <button class="add-to-cart" onclick="addToCart('${product.name}', '${product.image}')">Add to Cart</button>
                         <button class="show-description" onclick="showDescription('${product.name}', '${product.description}', '${product.image}')">Show Description</button>

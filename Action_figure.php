@@ -1,3 +1,94 @@
+<?php
+require 'Connections.php';
+
+// Add product
+if (isset($_POST['add_product'])) {
+    $target_dir = "uploads/";
+    $target_file = $target_dir . basename($_FILES["image"]["name"]);
+    if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+        $name = $_POST['name'];
+        $description = $_POST['description'];
+        $price = $_POST['price'];
+        $stock = $_POST['stock'];
+        $image = basename($_FILES["image"]["name"]);
+
+        $sql = "INSERT INTO action_figures (name, description, price, stock, image) VALUES ('$name', '$description', '$price', '$stock', '$image')";
+
+        if ($conn->query($sql) === TRUE) {
+            header("Location: logout.php?page=Action_figure");
+            exit();
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+    } else {
+        echo "Sorry, there was an error uploading your file.";
+    }
+}
+
+// Edit product
+if (isset($_POST['edit_product'])) {
+    $id = $_POST['id'];
+    $name = $_POST['name'];
+    $description = $_POST['description'];
+    $price = $_POST['price'];
+    $stock = $_POST['stock'];
+    $image = $_POST['image'];
+
+    // Check if a new image is uploaded
+    if (!empty($_FILES["image"]["name"])) {
+        $target_dir = "uploads/";
+        $target_file = $target_dir . basename($_FILES["image"]["name"]);
+        if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+            $image = basename($_FILES["image"]["name"]);
+        } else {
+            echo "Sorry, there was an error uploading your file.";
+        }
+    }
+
+    $sql = "UPDATE action_figures SET name='$name', description='$description', price='$price', stock='$stock', image='$image' WHERE id=$id";
+
+    if ($conn->query($sql) === TRUE) {
+        header("Location: logout.php?page=Action_figure");
+        exit();
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    }
+}
+
+// Delete product
+if (isset($_GET['delete_product'])) {
+    $id = $_GET['delete_product'];
+
+    $sql = "DELETE FROM action_figures WHERE id=$id";
+
+    if ($conn->query($sql) === TRUE) {
+        header("Location: logout.php?page=Action_figure");
+        exit();
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    }
+}
+
+// Get product
+if (isset($_GET['get_product'])) {
+    $id = $_GET['get_product'];
+
+    $sql = "SELECT * FROM action_figures WHERE id=$id";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        echo json_encode($result->fetch_assoc());
+    } else {
+        echo json_encode([]);
+    }
+
+    $conn->close();
+    exit();
+}
+
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,14 +125,13 @@
         }
         .product img {
             width: 100%;
-            height: auto;
-            max-height: 300px;
+            height: 300px; /* Set a fixed height */
             object-fit: cover;
             border-radius: 8px;
         }
-        .product h3 {
+        .product h3, .product p {
             font-size: 16px;
-            margin: 10px 0;
+            margin: 0; /* Remove margin */
         }
         .button-container {
             display: flex;
@@ -196,15 +286,44 @@
     <h2>One Piece Action Figure</h2>
     
     <!-- Add Product Form -->
-    <form id="add-product-form" enctype="multipart/form-data">
-        <input type="text" id="product-name" placeholder="Product Name" required>
-        <input type="text" id="product-description" placeholder="Product Description" required>
-        <input type="file" id="product-image" accept="image/*" required>
-        <button type="submit">Add Product</button>
+    <form id="add-product-form" enctype="multipart/form-data" method="POST" action="">
+        <input type="text" id="product-name" name="name" placeholder="Product Name" required>
+        <input type="text" id="product-description" name="description" placeholder="Product Description" required>
+        <input type="number" id="product-price" name="price" placeholder="Product Price" required>
+        <input type="number" id="product-stock" name="stock" placeholder="Product Stock" required>
+        <input type="file" id="product-image" name="image" accept="image/*" required>
+        <button type="submit" name="add_product">Add Product</button>
     </form>
 
     <div class="product-grid">
-        <!-- Existing products -->
+        <?php
+        // Database connection
+        require 'Connections.php';
+
+        // Fetch products from database
+        $sql = "SELECT * FROM action_figures";
+        $result = $conn->query($sql);
+
+        if ($result->num_rows > 0) {
+            while($row = $result->fetch_assoc()) {
+                echo '<div class="product">';
+                echo '<img src="uploads/' . $row["image"] . '" alt="' . $row["name"] . '">';
+                echo '<h3>' . $row["name"] . '</h3>';
+                echo '<p>Price: $' . $row["price"] . '</p>';
+                echo '<p>Stock: ' . $row["stock"] . '</p>';
+                echo '<div class="button-container">';
+                echo '<button class="show-description" onclick="showDescription(\'' . $row["name"] . '\', \'' . $row["description"] . '\', \'uploads/' . $row["image"] . '\')">Show Description</button>';
+                echo '<button class="edit-product" onclick="editProduct(' . $row["id"] . ')">Edit</button>';
+                echo '<button class="delete-product" onclick="deleteProduct(' . $row["id"] . ')">Delete</button>';
+                echo '</div>';
+                echo '</div>';
+            }
+        } else {
+            echo "0 results";
+        }
+
+        $conn->close();
+        ?>
     </div>
 
     <!-- Description Modal -->
@@ -222,19 +341,19 @@
         <div class="edit-content">
             <span class="close-edit" onclick="closeEdit()">&times;</span>
             <h3>Edit Product</h3>
-            <form id="edit-product-form">
-                <input type="text" id="edit-product-name" placeholder="Product Name" required>
-                <input type="text" id="edit-product-description" placeholder="Product Description" required>
-                <input type="text" id="edit-product-image" placeholder="Image URL">
-                <button type="submit">Save Changes</button>
+            <form id="edit-product-form" enctype="multipart/form-data" method="POST" action="">
+                <input type="hidden" id="edit-product-id" name="id">
+                <input type="text" id="edit-product-name" name="name" placeholder="Product Name" required>
+                <input type="text" id="edit-product-description" name="description" placeholder="Product Description" required>
+                <input type="number" id="edit-product-price" name="price" placeholder="Product Price" required>
+                <input type="number" id="edit-product-stock" name="stock" placeholder="Product Stock" required>
+                <input type="file" id="edit-product-image" name="image" accept="image/*">
+                <button type="submit" name="edit_product">Save Changes</button>
             </form>
         </div>
     </div>
 
-    <script src="products.js"></script>
     <script>
-        let currentEditIndex = -1;
-
         function showDescription(productName, description, imageSrc) {
             document.getElementById("description-title").innerText = productName;
             document.getElementById("description-image").src = imageSrc;
@@ -246,76 +365,30 @@
             document.getElementById("description-modal").style.display = "none";
         }
 
-        function deleteProduct(productName) {
-            if (confirm(`Are you sure you want to delete ${productName}?`)) {
-                actionFigures = actionFigures.filter(product => product.name !== productName);
-                renderProducts();
+        function deleteProduct(id) {
+            if (confirm(`Are you sure you want to delete this product?`)) {
+                window.location.href = `logout.php?page=Action_figure&delete_product=${id}`;
             }
         }
 
-        function editProduct(index) {
-            currentEditIndex = index;
-            const product = actionFigures[index];
-            document.getElementById('edit-product-name').value = product.name;
-            document.getElementById('edit-product-description').value = product.description;
-            document.getElementById('edit-product-image').value = product.image;
-            document.getElementById('edit-modal').style.display = 'block';
+        function editProduct(id) {
+            fetch(`?get_product=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('edit-product-id').value = data.id;
+                    document.getElementById('edit-product-name').value = data.name;
+                    document.getElementById('edit-product-description').value = data.description;
+                    document.getElementById('edit-product-price').value = data.price;
+                    document.getElementById('edit-product-stock').value = data.stock;
+                    document.getElementById('edit-product-image').value = data.image;
+                    document.getElementById('edit-modal').style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching product data:', error));
         }
-
-        document.getElementById('edit-product-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const name = document.getElementById('edit-product-name').value;
-            const description = document.getElementById('edit-product-description').value;
-            const image = document.getElementById('edit-product-image').value;
-
-            actionFigures[currentEditIndex] = { name, description, image };
-            renderProducts();
-            closeEdit();
-        });
 
         function closeEdit() {
             document.getElementById('edit-modal').style.display = 'none';
         }
-
-        function renderProducts() {
-            const productGrid = document.querySelector('.product-grid');
-            productGrid.innerHTML = '';
-            actionFigures.forEach((product, index) => {
-                const productDiv = document.createElement('div');
-                productDiv.classList.add('product');
-                productDiv.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <div class="button-container">
-                        <button class="show-description" onclick="showDescription('${product.name}', '${product.description}', '${product.image}')">Show Description</button>
-                        <button class="edit-product" onclick="editProduct(${index})">Edit</button>
-                        <button class="delete-product" onclick="deleteProduct('${product.name}')">Delete</button>
-                    </div>
-                `;
-                productGrid.appendChild(productDiv);
-            });
-        }
-
-        document.getElementById('add-product-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const name = document.getElementById('product-name').value;
-            const description = document.getElementById('product-description').value;
-            const imageInput = document.getElementById('product-image');
-            const imageFile = imageInput.files[0];
-
-            if (imageFile) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const imageUrl = e.target.result;
-                    actionFigures.push({ name, description, image: imageUrl });
-                    renderProducts();
-                };
-                reader.readAsDataURL(imageFile);
-            }
-        });
-
-        // Initial render
-        renderProducts();
     </script>
 
 </body>
