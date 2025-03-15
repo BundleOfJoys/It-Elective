@@ -46,7 +46,7 @@
                         include "Manga_ordinary.php";
                         break;
                         case "Cards":
-                            include "Cards.php";
+                            include "Cards_ordinary.php";
                             break;
                 case "home":
                     include "home.php";

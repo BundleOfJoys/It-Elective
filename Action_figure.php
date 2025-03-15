@@ -1,7 +1,6 @@
 <?php
 require 'Connections.php';
 
-// Add product
 if (isset($_POST['add_product'])) {
     $target_dir = "uploads/";
     $target_file = $target_dir . basename($_FILES["image"]["name"]);
@@ -25,27 +24,15 @@ if (isset($_POST['add_product'])) {
     }
 }
 
-// Edit product
-if (isset($_POST['edit_product'])) {
+if (isset($_POST['update_product'])) {
     $id = $_POST['id'];
     $name = $_POST['name'];
     $description = $_POST['description'];
     $price = $_POST['price'];
     $stock = $_POST['stock'];
-    $image = $_POST['image'];
+    $image = $_POST['existing_image'];
 
-    // Check if a new image is uploaded
-    if (!empty($_FILES["image"]["name"])) {
-        $target_dir = "uploads/";
-        $target_file = $target_dir . basename($_FILES["image"]["name"]);
-        if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
-            $image = basename($_FILES["image"]["name"]);
-        } else {
-            echo "Sorry, there was an error uploading your file.";
-        }
-    }
-
-    $sql = "UPDATE action_figures SET name='$name', description='$description', price='$price', stock='$stock', image='$image' WHERE id=$id";
+    $sql = "UPDATE action_figures SET name='$name', description='$description', price='$price', stock='$stock' WHERE id=$id";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: logout.php?page=Action_figure");
@@ -55,7 +42,6 @@ if (isset($_POST['edit_product'])) {
     }
 }
 
-// Delete product
 if (isset($_GET['delete_product'])) {
     $id = $_GET['delete_product'];
 
@@ -69,7 +55,6 @@ if (isset($_GET['delete_product'])) {
     }
 }
 
-// Get product
 if (isset($_GET['get_product'])) {
     $id = $_GET['get_product'];
 
@@ -80,6 +65,23 @@ if (isset($_GET['get_product'])) {
         echo json_encode($result->fetch_assoc());
     } else {
         echo json_encode([]);
+    }
+
+    $conn->close();
+    exit();
+}
+
+// Update stock
+if (isset($_GET['update_stock'])) {
+    $id = $_GET['update_stock'];
+    $new_stock = $_GET['new_stock'];
+
+    $sql = "UPDATE action_figures SET stock='$new_stock' WHERE id=$id";
+
+    if ($conn->query($sql) === TRUE) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'error' => $conn->error]);
     }
 
     $conn->close();
@@ -125,13 +127,13 @@ $conn->close();
         }
         .product img {
             width: 100%;
-            height: 300px; /* Set a fixed height */
+            height: 300px;
             object-fit: cover;
             border-radius: 8px;
         }
         .product h3, .product p {
             font-size: 16px;
-            margin: 0; /* Remove margin */
+            margin: 0;
         }
         .button-container {
             display: flex;
@@ -221,7 +223,6 @@ $conn->close();
         .remove-from-cart:hover {
             background-color: #c82333;
         }
-        /* Description Modal */
         .description-modal {
             display: none;
             position: fixed;
@@ -250,7 +251,6 @@ $conn->close();
         .close-description:hover {
             color: red;
         }
-        /* Edit Product Modal */
         .edit-modal {
             display: none;
             position: fixed;
@@ -266,9 +266,33 @@ $conn->close();
             background: white;
             padding: 20px;
             border-radius: 8px;
-            max-width: 400px;
+            max-width: 800px;
             margin: 10% auto;
             text-align: left;
+        }
+        .edit-content label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .edit-content input, .edit-content textarea, .edit-content button {
+            width: 98%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .edit-content button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .edit-content button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
         }
         .close-edit {
             cursor: pointer;
@@ -285,7 +309,6 @@ $conn->close();
 
     <h2>One Piece Action Figure</h2>
     
-    <!-- Add Product Form -->
     <form id="add-product-form" enctype="multipart/form-data" method="POST" action="">
         <input type="text" id="product-name" name="name" placeholder="Product Name" required>
         <input type="text" id="product-description" name="description" placeholder="Product Description" required>
@@ -295,12 +318,20 @@ $conn->close();
         <button type="submit" name="add_product">Add Product</button>
     </form>
 
+    <form id="update-product-form" enctype="multipart/form-data" method="POST" action="" style="display:none;">
+        <input type="hidden" id="update-product-id" name="id">
+        <input type="hidden" id="existing-image" name="existing_image">
+        <input type="text" id="update-product-name" name="name" placeholder="Product Name" required>
+        <input type="text" id="update-product-description" name="description" placeholder="Product Description" required>
+        <input type="number" id="update-product-price" name="price" placeholder="Product Price" required>
+        <input type="number" id="update-product-stock" name="stock" placeholder="Product Stock" required>
+        <button type="submit" name="update_product">Update Product</button>
+    </form>
+
     <div class="product-grid">
         <?php
-        // Database connection
         require 'Connections.php';
 
-        // Fetch products from database
         $sql = "SELECT * FROM action_figures";
         $result = $conn->query($sql);
 
@@ -313,7 +344,7 @@ $conn->close();
                 echo '<p>Stock: ' . $row["stock"] . '</p>';
                 echo '<div class="button-container">';
                 echo '<button class="show-description" onclick="showDescription(\'' . $row["name"] . '\', \'' . $row["description"] . '\', \'uploads/' . $row["image"] . '\')">Show Description</button>';
-                echo '<button class="edit-product" onclick="editProduct(' . $row["id"] . ')">Edit</button>';
+                echo '<button class="edit-product" onclick="editProduct(' . $row["id"] . ', \'' . $row["name"] . '\', \'' . $row["description"] . '\', ' . $row["price"] . ', ' . $row["stock"] . ')">Edit</button>';
                 echo '<button class="delete-product" onclick="deleteProduct(' . $row["id"] . ')">Delete</button>';
                 echo '</div>';
                 echo '</div>';
@@ -326,7 +357,6 @@ $conn->close();
         ?>
     </div>
 
-    <!-- Description Modal -->
     <div id="description-modal" class="description-modal">
         <div class="description-content">
             <span class="close-description" onclick="closeDescription()">&times;</span>
@@ -336,19 +366,22 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Edit Product Modal -->
     <div id="edit-modal" class="edit-modal">
         <div class="edit-content">
             <span class="close-edit" onclick="closeEdit()">&times;</span>
             <h3>Edit Product</h3>
             <form id="edit-product-form" enctype="multipart/form-data" method="POST" action="">
                 <input type="hidden" id="edit-product-id" name="id">
+                <input type="hidden" id="existing-image" name="existing_image">
+                <label for="edit-product-name">Product Name</label>
                 <input type="text" id="edit-product-name" name="name" placeholder="Product Name" required>
-                <input type="text" id="edit-product-description" name="description" placeholder="Product Description" required>
+                <label for="edit-product-description">Product Description</label>
+                <textarea id="edit-product-description" name="description" placeholder="Product Description" required></textarea>
+                <label for="edit-product-price">Product Price</label>
                 <input type="number" id="edit-product-price" name="price" placeholder="Product Price" required>
+                <label for="edit-product-stock">Product Stock</label>
                 <input type="number" id="edit-product-stock" name="stock" placeholder="Product Stock" required>
-                <input type="file" id="edit-product-image" name="image" accept="image/*">
-                <button type="submit" name="edit_product">Save Changes</button>
+                <button type="submit" name="update_product">Save Changes</button>
             </form>
         </div>
     </div>
@@ -371,23 +404,47 @@ $conn->close();
             }
         }
 
-        function editProduct(id) {
-            fetch(`?get_product=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('edit-product-id').value = data.id;
-                    document.getElementById('edit-product-name').value = data.name;
-                    document.getElementById('edit-product-description').value = data.description;
-                    document.getElementById('edit-product-price').value = data.price;
-                    document.getElementById('edit-product-stock').value = data.stock;
-                    document.getElementById('edit-product-image').value = data.image;
-                    document.getElementById('edit-modal').style.display = 'block';
-                })
-                .catch(error => console.error('Error fetching product data:', error));
+        function editProduct(id, name, description, price, stock) {
+            document.getElementById('edit-product-id').value = id;
+            document.getElementById('edit-product-name').value = name;
+            document.getElementById('edit-product-description').value = description;
+            document.getElementById('edit-product-price').value = price;
+            document.getElementById('edit-product-stock').value = stock;
+            document.getElementById('edit-modal').style.display = 'block';
         }
 
         function closeEdit() {
             document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        function updateStockOnPage(productId, newStock) {
+            const productElements = document.querySelectorAll('.product');
+            productElements.forEach(productElement => {
+                const addToCartButton = productElement.querySelector('.add-to-cart');
+                if (addToCartButton && addToCartButton.getAttribute('onclick').includes(`addToCart(${productId})`)) {
+                    const stockElement = productElement.querySelector('p:nth-of-type(2)');
+                    stockElement.innerText = `Stock: ${newStock}`;
+                    if (newStock <= 0) {
+                        addToCartButton.disabled = true;
+                        addToCartButton.innerText = 'Out of Stock';
+                        addToCartButton.classList.remove('add-to-cart');
+                        addToCartButton.classList.add('out-of-stock');
+                    }
+                }
+            });
+        }
+
+        function updateStock(productId, newStock) {
+            fetch(`Action_figure.php?update_stock=${productId}&new_stock=${newStock}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Stock updated successfully');
+                    } else {
+                        console.error('Error updating stock:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         }
     </script>
 
