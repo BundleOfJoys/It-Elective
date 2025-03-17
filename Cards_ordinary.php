@@ -387,7 +387,7 @@ $conn->close();
                 echo '<div class="product">';
                 echo '<img src="uploads/' . $row["image"] . '" alt="' . $row["name"] . '">';
                 echo '<h3>' . $row["name"] . '</h3>';
-                echo '<p>Price: $' . $row["price"] . '</p>';
+                echo '<p>Price: $' . number_format($row["price"], 2) . '</p>';
                 echo '<p>Stock: ' . $row["stock"] . '</p>';
                 echo '<div class="button-container">';
                 if ($row["stock"] > 0) {
@@ -516,12 +516,12 @@ $conn->close();
                         cartItem.innerHTML = `
                             <img src="uploads/${product.image}" alt="${product.name}">
                             <span style="margin-right: 10px;">${product.name}</span>
-                            <span style="margin-left: auto;">$${product.price}</span>
+                            <span style="margin-left: auto;">$${parseFloat(product.price).toLocaleString()}</span>
                         `;
                         cartItemsContainer.appendChild(cartItem);
 
                         totalCost += parseFloat(product.price) * product.quantity;
-                        document.getElementById('total-cost').innerText = totalCost.toFixed(2);
+                        document.getElementById('total-cost').innerText = totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     })
                     .catch(error => console.error('Error:', error));
             });

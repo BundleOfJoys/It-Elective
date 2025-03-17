@@ -340,7 +340,7 @@ $conn->close();
                 echo '<div class="product">';
                 echo '<img src="uploads/' . $row["image"] . '" alt="' . $row["name"] . '">';
                 echo '<h3>' . $row["name"] . '</h3>';
-                echo '<p>Price: $' . $row["price"] . '</p>';
+                echo '<p>Price: $' . number_format($row["price"], 2) . '</p>';
                 echo '<p>Stock: ' . $row["stock"] . '</p>';
                 echo '<div class="button-container">';
                 echo '<button class="show-description" onclick="showDescription(\'' . $row["name"] . '\', \'' . $row["description"] . '\', \'uploads/' . $row["image"] . '\')">Show Description</button>';
